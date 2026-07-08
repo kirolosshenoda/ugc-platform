@@ -4,6 +4,18 @@ import 'express-async-errors'
 import dotenv from 'dotenv'
 import { createServer } from 'http'
 import { Server as SocketIOServer } from 'socket.io'
+import { setupSocketHandlers } from './sockets/handlers.js'
+import { errorHandler } from './middleware/errorHandler.js'
+
+// Routes
+import authRoutes from './routes/auth.js'
+import creatorRoutes from './routes/creators.js'
+import contentRoutes from './routes/content.js'
+import campaignRoutes from './routes/campaigns.js'
+import messageRoutes from './routes/messages.js'
+import reviewRoutes from './routes/reviews.js'
+import paymentRoutes from './routes/payments.js'
+import adminRoutes from './routes/admin.js'
 
 dotenv.config()
 
@@ -26,16 +38,24 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date() })
 })
 
+app.use('/api/auth', authRoutes)
+app.use('/api/creators', creatorRoutes)
+app.use('/api/content', contentRoutes)
+app.use('/api/campaigns', campaignRoutes)
+app.use('/api/messages', messageRoutes)
+app.use('/api/reviews', reviewRoutes)
+app.use('/api/payments', paymentRoutes)
+app.use('/api/admin', adminRoutes)
+
+// Error handling
+app.use(errorHandler)
+
 // Socket.IO
-io.on('connection', (socket) => {
-  console.log('User connected:', socket.id)
-  socket.on('disconnect', () => {
-    console.log('User disconnected:', socket.id)
-  })
-})
+setupSocketHandlers(io)
 
 const PORT = process.env.PORT || 5000
 
 httpServer.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
+  console.log(`Database: ${process.env.DATABASE_URL}`)
 })
